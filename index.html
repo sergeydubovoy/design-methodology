@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>Дизайн-методология 2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #0e0c14;
+            --color-bg-deep: #080610;
+            --color-surface: #17152200;
+            --color-text: #f0edf8;
+            --color-text-secondary: #c4bdd8;
+            --color-text-muted: #7a738f;
+            --color-accent-1: #ff6b6b;
+            --color-accent-2: #c084fc;
+            --color-accent-3: #fbbf24;
+            --color-accent-4: #34d399;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.09);
+            --color-vignette: rgba(0,0,0,0.45);
+            --font-display: 'Instrument Serif', Georgia, serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+    <style>
+        :root {
+            --color-bg: #0e0c14;
+            --color-text: #f0edf8;
+            --glow-color-rgb: 255, 107, 107;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background: var(--color-bg);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--color-text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .deck {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.96);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .slide>.content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1080px;
+            padding: clamp(1.5rem, 4vw, 3.5rem);
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 100;
+            background: rgba(14, 12, 20, 0.75);
+            backdrop-filter: blur(12px);
+            padding: 9px 22px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: #ff6b6b;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.25s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 107, 107, 0.15);
+        }
+
+        .slide-dots {
+            display: flex;
+            gap: 7px;
+        }
+
+        .slide-dots .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .slide-dots .dot.active {
+            background: #ff6b6b;
+            transform: scale(1.4);
+        }
+
+        .slide-counter {
+            font-size: 0.78rem;
+            color: #7a738f;
+            min-width: 38px;
+            text-align: center;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        /* Blobs */
+        @keyframes float-slow {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(55px, -45px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-35px, 35px) scale(0.92);
+            }
+
+            75% {
+                transform: translate(45px, 18px) scale(1.06);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes float-drift {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(-45px, -55px) scale(1.13) rotate(3deg);
+            }
+
+            66% {
+                transform: translate(38px, 28px) scale(0.9) rotate(-2deg);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-14px)
+            }
+        }
+
+        .gradient-mesh {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: float-slow 11s ease-in-out infinite;
+        }
+
+        .blob:nth-child(2) {
+            animation: float-drift 15s ease-in-out infinite;
+        }
+
+        .blob:nth-child(3) {
+            animation: float-slow 19s ease-in-out infinite reverse;
+        }
+
+        .blob:nth-child(4) {
+            animation: float-drift 13s ease-in-out infinite reverse;
+        }
+
+        .particle-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+            opacity: 0.025;
+            mix-blend-mode: overlay;
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%);
+        }
+
+        /* Glow */
+        .text-glow {
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5), 0 0 40px rgba(255, 107, 107, 0.2);
+        }
+
+        .violet-glow {
+            text-shadow: 0 0 20px rgba(192, 132, 252, 0.55), 0 0 40px rgba(192, 132, 252, 0.2);
+        }
+
+        @keyframes glow-pulse {
+
+            0%,
+            100% {
+                text-shadow: 0 0 20px rgba(255, 107, 107, 0.5), 0 0 40px rgba(255, 107, 107, 0.2);
+            }
+
+            50% {
+                text-shadow: 0 0 30px rgba(255, 107, 107, 0.8), 0 0 60px rgba(255, 107, 107, 0.3);
+            }
+        }
+
+        .glow-pulse {
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+
+        /* Accent tag */
+        .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 0.75rem;
+        }
+
+        .tag-coral {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.25);
+        }
+
+        .tag-violet {
+            background: rgba(192, 132, 252, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(192, 132, 252, 0.25);
+        }
+
+        .tag-amber {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.25);
+        }
+
+        .tag-green {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.25);
+        }
+
+        /* Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Timeline */
+        .timeline-line {
+            position: absolute;
+            left: 18px;
+            top: 24px;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #ff6b6b, #c084fc, #fbbf24, #34d399, transparent);
+        }
+
+        .timeline-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 3px;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        /* Bar fill */
+        .bar-track {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.6s ease;
+        }
+
+        /* Gradient text */
+        .grad-text {
+            background: linear-gradient(135deg, #ff6b6b, #c084fc, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grad-text-2 {
+            background: linear-gradient(135deg, #c084fc, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Checklist */
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 0.6rem;
+        }
+
+        .check-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Responsive */
+        @media(max-width:768px) {
+            .slide>.content {
+                padding: 1.25rem;
+            }
+
+            .grid-3,
+            .grid-2 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+
+    <div class="deck">
+
+        <!-- SLIDE 1: TITLE -->
+        <div class="slide active" data-slide="1">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:500px;height:500px;top:-120px;right:-100px;background:#ff6b6b;opacity:0.12;"></div>
+                <div class="blob"
+                    style="width:350px;height:350px;bottom:-80px;left:-60px;background:#c084fc;opacity:0.10;"></div>
+                <div class="blob" style="width:250px;height:250px;top:45%;left:18%;background:#fbbf24;opacity:0.08;">
+                </div>
+                <div class="blob"
+                    style="width:200px;height:200px;bottom:20%;right:15%;background:#34d399;opacity:0.07;"></div>
+            </div>
+            <canvas class="particle-canvas"></canvas>
+            <div class="content" style="text-align:center;">
+                <div style="font-size:80px;animation:float 3.5s ease-in-out infinite;margin-bottom:1.5rem;"
+                    class="reveal">🎨</div>
+                <h1 class="grad-text reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5.5vw,4.2rem);font-weight:400;line-height:1.15;margin-bottom:1rem;">
+                    Дизайн-методология 2.0
+                </h1>
+                <p class="reveal"
+                    style="font-size:clamp(0.8rem,1.3vw,1rem);font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:#7a738f;margin-bottom:2rem;">
+                    Модульная система · Нативный скролл · Живой UI-кит
+                </p>
+                <div class="reveal" style="display:inline-flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <span class="tag tag-coral">UX</span>
+                    <span class="tag tag-violet">Design System</span>
+                    <span class="tag tag-amber">Roadmap</span>
+                    <span class="tag tag-green">A11y</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: CONTEXT -->
+        <div class="slide" data-slide="2">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:400px;height:400px;top:-80px;right:-80px;background:#ff6b6b;opacity:0.08;"></div>
+                <div class="blob"
+                    style="width:280px;height:280px;bottom:-50px;left:-40px;background:#c084fc;opacity:0.07;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-coral reveal">Контекст</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,3.8vw,3rem);font-weight:400;line-height:1.2;margin-bottom:1.2rem;">
+                    Почему это <span class="grad-text">важно сейчас?</span>
+                </h2>
+                <p class="reveal"
+                    style="color:#c4bdd8;font-size:clamp(0.95rem,1.5vw,1.1rem);max-width:62ch;line-height:1.7;margin-bottom:2rem;">
+                    Текущий подход к построению интерфейса сложился исторически. С ростом проекта системные проблемы
+                    усугубляются - и напрямую тормозят разработку, снижают качество продукта, увеличивают стоимость
+                    изменений
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" class="reveal">
+                    <div class="glass-card" style="border-top:2px solid #ff6b6b;">
+                        <div style="font-size:1.8rem;margin-bottom:0.5rem;">🐌</div>
+                        <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.3rem;">Тормозит разработку</div>
+                        <div style="font-size:0.82rem;color:#7a738f;">Каждое изменение требует всё больше усилий</div>
+                    </div>
+                    <div class="glass-card" style="border-top:2px solid #c084fc;">
+                        <div style="font-size:1.8rem;margin-bottom:0.5rem;">📉</div>
+                        <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.3rem;">Снижает качество</div>
+                        <div style="font-size:0.82rem;color:#7a738f;">Инконсистентный UX на разных страницах</div>
+                    </div>
+                    <div class="glass-card" style="border-top:2px solid #fbbf24;">
+                        <div style="font-size:1.8rem;margin-bottom:0.5rem;">💸</div>
+                        <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.3rem;">Дорожает с каждым спринтом
+                        </div>
+                        <div style="font-size:0.82rem;color:#7a738f;">Дизайн-долг копится быстрее, чем отдаётся</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: PAIN 1 - SCROLL WELLS -->
+        <div class="slide" data-slide="3">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:380px;height:380px;top:-60px;left:-60px;background:#ff6b6b;opacity:0.10;"></div>
+                <div class="blob"
+                    style="width:250px;height:250px;bottom:-40px;right:-40px;background:#fbbf24;opacity:0.08;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-coral reveal">Боль #1</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:400;margin-bottom:1.2rem;">
+                    Архитектура «колодцев» - <span class="grad-text">всё во viewport</span>
+                </h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;" class="reveal">
+                    <div>
+                        <p style="color:#c4bdd8;font-size:0.95rem;line-height:1.7;margin-bottom:1rem;">
+                            Виджеты проектируются в расчёте на видимую область → каждый обзаводится своим внутренним
+                            скроллом. Интерфейс превращается в набор независимых колодцев
+                        </p>
+                        <div
+                            style="background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.15);border-radius:12px;padding:1rem;font-size:0.82rem;font-family:monospace;color:#c4bdd8;line-height:1.9;">
+                            Viewport <span style="color:#ff6b6b;">[↕ scroll] ага, и тут тоже</span><br>
+                            └─ Виджет A <span style="color:#ff6b6b;">[↕ scroll]</span><br>
+                            └─ Виджет B <span style="color:#ff6b6b;">[↕ scroll]</span><br>
+                            └─ Виджет C <span style="color:#ff6b6b;">[↕ scroll]</span><br>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div class="glass-card" style="padding:0.9rem 1.1rem;">
+                            <span style="color:#ff6b6b;font-weight:700;margin-right:8px;">✗</span>
+                            <span style="font-size:0.88rem;">UX кошмар на маленьких экранах</span>
+                        </div>
+                        <div class="glass-card" style="padding:0.9rem 1.1rem;">
+                            <span style="color:#ff6b6b;font-weight:700;margin-right:8px;">✗</span>
+                            <span style="font-size:0.88rem;">Нарушение доступности</span>
+                        </div>
+                        <div class="glass-card" style="padding:0.9rem 1.1rem;">
+                            <span style="color:#ff6b6b;font-weight:700;margin-right:8px;">✗</span>
+                            <span style="font-size:0.88rem;">Поведение при resize не предусмотрено</span>
+                        </div>
+                        <div class="glass-card" style="padding:0.9rem 1.1rem;">
+                            <span style="color:#ff6b6b;font-weight:700;margin-right:8px;">✗</span>
+                            <span style="font-size:0.88rem;">Адаптив «на глаз» - расхождение макет/прод</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: PAIN 2 & 3 -->
+        <div class="slide" data-slide="4">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:350px;height:350px;top:-50px;right:-50px;background:#c084fc;opacity:0.09;"></div>
+                <div class="blob"
+                    style="width:220px;height:220px;bottom:-30px;left:10%;background:#34d399;opacity:0.07;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-violet reveal">Боли #2 и #3</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:400;margin-bottom:1.2rem;">
+                    Адаптив без правил & разрыв <span class="grad-text-2">Figma → Прод</span>
+                </h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="reveal">
+                    <div class="glass-card" style="border-left:3px solid #c084fc;">
+                        <div style="font-size:1.5rem;margin-bottom:0.6rem;">📐</div>
+                        <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;color:#c084fc;">Резиновый
+                            дизайн без методологии</div>
+                        <div style="font-size:0.82rem;color:#c4bdd8;line-height:1.7;">
+                            Fluid-подход имеет свои ограничения. Без брейкпоинтов и правил - ломается.
+                            Адаптив де-факто делается фронтендом «по ситуации»:
+                        </div>
+                        <div style="margin-top:0.75rem;display:flex;flex-direction:column;gap:6px;">
+                            <div style="font-size:0.8rem;color:#7a738f;">→ Инконсистентность одних виджетов на разных
+                                страницах</div>
+                            <div style="font-size:0.8rem;color:#7a738f;">→ Споры в ревью «как это на 1280?»</div>
+                            <div style="font-size:0.8rem;color:#7a738f;">→ Компоненты сложно переиспользовать</div>
+                        </div>
+                    </div>
+                    <div class="glass-card" style="border-left:3px solid #34d399;">
+                        <div style="font-size:1.5rem;margin-bottom:0.6rem;">🔀</div>
+                        <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;color:#34d399;">Разрыв бизнес
+                            → дизайн → разработка</div>
+                        <div style="font-size:0.82rem;color:#c4bdd8;line-height:1.7;">
+                            Дизайнер приступает без полного понимания требований → цикл макет → замечания → переработка:
+                        </div>
+                        <div style="margin-top:0.75rem;display:flex;flex-direction:column;gap:6px;">
+                            <div style="font-size:0.8rem;color:#7a738f;">→ Прод и Figma живут собственными жизнями</div>
+                            <div style="font-size:0.8rem;color:#7a738f;">→ Фронтенд принимает дизайн-решения</div>
+                            <div style="font-size:0.8rem;color:#7a738f;">→ Дизайн-долг + технический долг одновременно
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: SOLUTION OVERVIEW -->
+        <div class="slide" data-slide="5">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:450px;height:450px;top:-90px;right:-90px;background:#34d399;opacity:0.09;"></div>
+                <div class="blob"
+                    style="width:300px;height:300px;bottom:-60px;left:-50px;background:#c084fc;opacity:0.08;"></div>
+                <div class="blob" style="width:200px;height:200px;top:40%;left:20%;background:#fbbf24;opacity:0.06;">
+                </div>
+            </div>
+            <div class="content" style="text-align:center;">
+                <div class="tag tag-green reveal" style="margin-bottom:1rem;">Решение</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,4vw,3.2rem);font-weight:400;margin-bottom:0.5rem;">
+                    Четыре составляющих
+                </h2>
+                <p class="reveal" style="color:#7a738f;font-size:0.9rem;margin-bottom:2rem;">Без полной остановки
+                    разработки · Эволюционно</p>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;" class="reveal">
+                    <div class="glass-card" style="text-align:left;border-top:2px solid #ff6b6b;">
+                        <div style="font-size:1.8rem;margin-bottom:0.6rem;">📚</div>
+                        <div style="font-weight:800;font-size:1.3rem;color:#ff6b6b;margin-bottom:0.3rem;">01</div>
+                        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">Обновление UI-кита</div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Единый источник правды для всех визуальных решений
+                        </div>
+                    </div>
+                    <div class="glass-card" style="text-align:left;border-top:2px solid #c084fc;">
+                        <div style="font-size:1.8rem;margin-bottom:0.6rem;">📐</div>
+                        <div style="font-weight:800;font-size:1.3rem;color:#c084fc;margin-bottom:0.3rem;">02</div>
+                        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">Методология адаптива</div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Явные правила для всех брейкпоинтов</div>
+                    </div>
+                    <div class="glass-card" style="text-align:left;border-top:2px solid #fbbf24;">
+                        <div style="font-size:1.8rem;margin-bottom:0.6rem;">📋</div>
+                        <div style="font-weight:800;font-size:1.3rem;color:#fbbf24;margin-bottom:0.3rem;">03</div>
+                        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">Паспорт компонента</div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Чеклист перед стартом разработки</div>
+                    </div>
+                    <div class="glass-card" style="text-align:left;border-top:2px solid #34d399;">
+                        <div style="font-size:1.8rem;margin-bottom:0.6rem;">🚀</div>
+                        <div style="font-weight:800;font-size:1.3rem;color:#34d399;margin-bottom:0.3rem;">04</div>
+                        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">Поэтапное внедрение</div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Инкрементально, без дизайн-стопа</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: UI KIT -->
+        <div class="slide" data-slide="6">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:360px;height:360px;top:-60px;right:-40px;background:#ff6b6b;opacity:0.08;"></div>
+                <div class="blob"
+                    style="width:240px;height:240px;bottom:-40px;left:-30px;background:#fbbf24;opacity:0.07;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-coral reveal">01 - UI-кит</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:400;margin-bottom:1.2rem;">
+                    Единственный <span class="grad-text">источник истины</span>
+                </h2>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="reveal">
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.3rem;margin-bottom:0.5rem;">🎨</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;color:#ff6b6b;">Дизайн токены
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Типографика, цвета, отступы, тени,
+                            радиусы</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.3rem;margin-bottom:0.5rem;">📏</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;color:#c084fc;">Брейкпоинты
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Явно зафиксированные,
+                            согласованные с командой фронтенда</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.3rem;margin-bottom:0.5rem;">🧩</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;color:#fbbf24;">Примитивы
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Кнопки, инпуты, бейджи, иконки -
+                            со всеми состояниями: default, hover, focus, disabled, error</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.3rem;margin-bottom:0.5rem;">🚫</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;color:#34d399;">Правило
+                            скролла</div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Вложенный скролл = только
+                            обоснованное исключение. Нативный скролл страницы - дефолт</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.3rem;margin-bottom:0.5rem;">⬛</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;color:#ff6b6b;">Сетка и
+                            лейаут</div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Column grid, gutter, margin - для
+                            каждого брейкпоинта</div>
+                    </div>
+                    <div class="glass-card"
+                        style="padding:1.1rem;background:rgba(255,107,107,0.06);border-color:rgba(255,107,107,0.2);">
+                        <div style="font-size:1.3rem;margin-bottom:0.5rem;">🔗</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;color:#ff6b6b;">Figma Tokens
+                            Plugin</div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Токены синхронизируются между
+                            Figma и Chakra UI автоматически</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: ADAPTIVE METHODOLOGY -->
+        <div class="slide" data-slide="7">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:380px;height:380px;top:-70px;left:-50px;background:#c084fc;opacity:0.09;"></div>
+                <div class="blob"
+                    style="width:260px;height:260px;bottom:-40px;right:-30px;background:#34d399;opacity:0.08;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-violet reveal">02 - Адаптив</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:400;margin-bottom:1rem;">
+                    Три состояния каждого <span class="grad-text-2">виджета</span>
+                </h2>
+                <p class="reveal" style="color:#c4bdd8;font-size:0.88rem;margin-bottom:1.2rem;">
+                    Виджет растёт с контентом - не обрезает его. Перекомпоновка прописана в макете явно.
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:1rem;"
+                    class="reveal">
+                    <div class="glass-card" style="text-align:center;border-bottom:2px solid #ff6b6b;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">📱</div>
+                        <div style="font-weight:700;font-size:0.88rem;color:#ff6b6b;margin-bottom:0.3rem;">Compact</div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Mobile / Tablet</div>
+                    </div>
+                    <div class="glass-card" style="text-align:center;border-bottom:2px solid #c084fc;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">💻</div>
+                        <div style="font-weight:700;font-size:0.88rem;color:#c084fc;margin-bottom:0.3rem;">Standard
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Desktop</div>
+                    </div>
+                    <div class="glass-card" style="text-align:center;border-bottom:2px solid #34d399;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">🖥️</div>
+                        <div style="font-weight:700;font-size:0.88rem;color:#34d399;margin-bottom:0.3rem;">Wide</div>
+                        <div style="font-size:0.78rem;color:#7a738f;">Wide Desktop</div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;" class="reveal">
+                    <div style="display:flex;align-items:center;gap:10px;font-size:0.85rem;">
+                        <span style="color:#34d399;font-weight:700;">✓</span>
+                        <span style="color:#c4bdd8;">Виджеты одного типа ведут себя <strong>одинаково</strong> по всему
+                            проекту</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;font-size:0.85rem;">
+                        <span style="color:#34d399;font-weight:700;">✓</span>
+                        <span style="color:#c4bdd8;">Приоритет - <strong>нативный скролл страницы</strong></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;font-size:0.85rem;">
+                        <span style="color:#34d399;font-weight:700;">✓</span>
+                        <span style="color:#c4bdd8;">Документация в Notion / Confluence / Storybook</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: COMPONENT PASSPORT -->
+        <div class="slide" data-slide="8">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:360px;height:360px;top:-60px;right:-50px;background:#fbbf24;opacity:0.08;"></div>
+                <div class="blob"
+                    style="width:240px;height:240px;bottom:-40px;left:5%;background:#ff6b6b;opacity:0.07;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-amber reveal">03 - Паспорт компонента</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.5rem,3.2vw,2.5rem);font-weight:400;margin-bottom:1rem;">
+                    Чеклист <span class="grad-text">перед разработкой</span>
+                </h2>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="reveal">
+                    <!-- Business -->
+                    <div class="glass-card" style="border-top:2px solid #fbbf24;padding:1.1rem;">
+                        <div
+                            style="font-weight:700;font-size:0.85rem;color:#fbbf24;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.06em;">
+                            🟡 Бизнес</div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(251,191,36,0.15);color:#fbbf24;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Бизнес-требование сформулировано</div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(251,191,36,0.15);color:#fbbf24;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">User Story понятна и зафиксирована</div>
+                        </div>
+                    </div>
+                    <!-- Design -->
+                    <div class="glass-card" style="border-top:2px solid #c084fc;padding:1.1rem;">
+                        <div
+                            style="font-weight:700;font-size:0.85rem;color:#c084fc;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.06em;">
+                            🟣 Дизайн</div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(192,132,252,0.15);color:#c084fc;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Edge cases: пусто, ошибка, длинный текст</div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(192,132,252,0.15);color:#c084fc;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Все интерактивные состояния описаны</div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(192,132,252,0.15);color:#c084fc;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Адаптив на всех брейкпоинтах в макете</div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(192,132,252,0.15);color:#c084fc;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Нет необоснованных вложенных скроллов</div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(192,132,252,0.15);color:#c084fc;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Соответствует согласованному UI-киту</div>
+                        </div>
+                    </div>
+                    <!-- Dev -->
+                    <div class="glass-card" style="border-top:2px solid #34d399;padding:1.1rem;">
+                        <div
+                            style="font-weight:700;font-size:0.85rem;color:#34d399;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.06em;">
+                            🩵 Разработка</div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(52,211,153,0.15);color:#34d399;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">FSD-слой определён (widget/feature/entity)
+                            </div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(52,211,153,0.15);color:#34d399;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Нет магических значений вне токенов</div>
+                        </div>
+                        <div class="check-item">
+                            <div class="check-box" style="background:rgba(52,211,153,0.15);color:#34d399;">✓</div>
+                            <div style="font-size:0.78rem;color:#c4bdd8;">Resize без кастомной логики вне UI-кита</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="reveal" style="font-size:0.78rem;color:#7a738f;margin-top:0.75rem;text-align:center;">
+                    Паспорт встроен в PR template и Definition of Done - иначе он просто «лежит в Notion»
+                </p>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: ROADMAP -->
+        <div class="slide" data-slide="9">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:400px;height:400px;top:-80px;right:-60px;background:#34d399;opacity:0.08;"></div>
+                <div class="blob"
+                    style="width:260px;height:260px;bottom:-50px;left:-40px;background:#c084fc;opacity:0.08;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-green reveal">04 - Роадмап</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:400;margin-bottom:1.2rem;">
+                    Поэтапно, без <span class="grad-text-2">остановки разработки</span>
+                </h2>
+                <div style="position:relative;padding-left:44px;" class="reveal">
+                    <div class="timeline-line"></div>
+                    <div style="display:flex;flex-direction:column;gap:0.9rem;">
+                        <div style="display:flex;align-items:flex-start;gap:12px;">
+                            <div class="timeline-dot" style="color:#ff6b6b;background:#ff6b6b;"></div>
+                            <div class="glass-card" style="flex:1;padding:0.8rem 1rem;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.25rem;">
+                                    <span class="tag tag-coral" style="margin:0;font-size:0.65rem;">Этап 0</span>
+                                    <span style="font-weight:700;font-size:0.88rem;">Аудит</span>
+                                    <span style="font-size:0.78rem;color:#7a738f;margin-left:auto;">1–2 нед</span>
+                                </div>
+                                <div style="font-size:0.78rem;color:#c4bdd8;">Фиксируем расхождения фронта с макетом и
+                                    все вложенные скроллы</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:flex-start;gap:12px;">
+                            <div class="timeline-dot" style="color:#c084fc;background:#c084fc;"></div>
+                            <div class="glass-card" style="flex:1;padding:0.8rem 1rem;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.25rem;">
+                                    <span class="tag tag-violet" style="margin:0;font-size:0.65rem;">Этап 1</span>
+                                    <span style="font-weight:700;font-size:0.88rem;">Фундамент</span>
+                                    <span style="font-size:0.78rem;color:#7a738f;margin-left:auto;">2–4 нед</span>
+                                </div>
+                                <div style="font-size:0.78rem;color:#c4bdd8;">Синхронизация токенов Figma ↔ Chakra UI.
+                                    Фиксация брейкпоинтов. Визуал не меняется</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:flex-start;gap:12px;">
+                            <div class="timeline-dot" style="color:#fbbf24;background:#fbbf24;"></div>
+                            <div class="glass-card" style="flex:1;padding:0.8rem 1rem;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.25rem;">
+                                    <span class="tag tag-amber" style="margin:0;font-size:0.65rem;">Этап 2</span>
+                                    <span style="font-weight:700;font-size:0.88rem;">UI-кит + Паспорт</span>
+                                    <span style="font-size:0.78rem;color:#7a738f;margin-left:auto;">параллельно</span>
+                                </div>
+                                <div style="font-size:0.78rem;color:#c4bdd8;">Новые компоненты - только по паспорту.
+                                    Старые обновляются по мере попадания в спринт</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:flex-start;gap:12px;">
+                            <div class="timeline-dot" style="color:#34d399;background:#34d399;"></div>
+                            <div class="glass-card" style="flex:1;padding:0.8rem 1rem;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.25rem;">
+                                    <span class="tag tag-green" style="margin:0;font-size:0.65rem;">Этап 3–4</span>
+                                    <span style="font-weight:700;font-size:0.88rem;">Адаптив + Миграция</span>
+                                    <span
+                                        style="font-size:0.78rem;color:#7a738f;margin-left:auto;">инкрементально</span>
+                                </div>
+                                <div style="font-size:0.78rem;color:#c4bdd8;">Описание поведения типовых виджетов →
+                                    инкрементальная миграция приоритетных проблемных компонентов</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: BENEFITS -->
+        <div class="slide" data-slide="10">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:420px;height:420px;top:-80px;left:-60px;background:#34d399;opacity:0.09;"></div>
+                <div class="blob"
+                    style="width:280px;height:280px;bottom:-50px;right:-40px;background:#ff6b6b;opacity:0.08;"></div>
+                <div class="blob" style="width:200px;height:200px;top:35%;right:20%;background:#fbbf24;opacity:0.06;">
+                </div>
+            </div>
+            <div class="content">
+                <div class="tag tag-green reveal">Результат</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:400;margin-bottom:1.2rem;">
+                    Что <span class="grad-text">получаем</span>
+                </h2>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="reveal">
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.4rem;margin-bottom:0.4rem;">🌱</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;">Не ломаем - эволюционируем
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Продукт продолжает развиваться без
+                            «дизайн-стопа»</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.4rem;margin-bottom:0.4rem;">🔮</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;">Предсказуемость для фронта
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Виджет имеет описанные паттерны
+                            поведения - не надо придумывать адаптив «на ходу»</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.4rem;margin-bottom:0.4rem;">💬</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;">Единый язык команды</div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Токены, брейкпоинты и паспорт -
+                            общий словарь для дизайна, фронта и бизнеса</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.4rem;margin-bottom:0.4rem;">📦</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;">Снижение дизайн-долга</div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Паспорт отсекает недодуманные
+                            макеты ещё до старта разработки</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.4rem;margin-bottom:0.4rem;">♿</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;">A11y как побочный эффект
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Отказ от вложенных скроллов +
+                            явные состояния = хорошая база для WCAG</div>
+                    </div>
+                    <div class="glass-card" style="padding:1.1rem;">
+                        <div style="font-size:1.4rem;margin-bottom:0.4rem;">🔄</div>
+                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.3rem;">Инкрементальное внедрение
+                        </div>
+                        <div style="font-size:0.78rem;color:#7a738f;line-height:1.5;">Новые модули сразу по правилам;
+                            старые подтягиваются параллельно фич-разработке</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 11: RISKS -->
+        <div class="slide" data-slide="11">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:360px;height:360px;top:-60px;right:-50px;background:#ff6b6b;opacity:0.09;"></div>
+                <div class="blob"
+                    style="width:240px;height:240px;bottom:-40px;left:5%;background:#fbbf24;opacity:0.08;"></div>
+            </div>
+            <div class="content">
+                <div class="tag tag-coral reveal">Риски</div>
+                <h2 class="reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:400;margin-bottom:1.2rem;">
+                    Честно о <span class="grad-text">подводных камнях</span>
+                </h2>
+                <div style="display:flex;flex-direction:column;gap:10px;" class="reveal">
+                    <div class="glass-card"
+                        style="padding:0.85rem 1.1rem;display:flex;align-items:flex-start;gap:12px;">
+                        <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                        <div>
+                            <span style="font-weight:700;font-size:0.88rem;color:#fbbf24;">Паспорт воспринимается как
+                                бюрократия</span>
+                            <span style="color:#7a738f;font-size:0.82rem;"> → Чеклист: 10–15 пунктов, не 40. Объяснить
+                                ценность команде</span>
+                        </div>
+                    </div>
+                    <div class="glass-card"
+                        style="padding:0.85rem 1.1rem;display:flex;align-items:flex-start;gap:12px;">
+                        <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                        <div>
+                            <span style="font-weight:700;font-size:0.88rem;color:#fbbf24;">Токены снова
+                                разойдутся</span>
+                            <span style="color:#7a738f;font-size:0.82rem;"> → Нужен процесс синхронизации. Либо сами,
+                                либо автоматизация через Style Dictionary</span>
+                        </div>
+                    </div>
+                    <div class="glass-card"
+                        style="padding:0.85rem 1.1rem;display:flex;align-items:flex-start;gap:12px;">
+                        <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                        <div>
+                            <span style="font-weight:700;font-size:0.88rem;color:#fbbf24;">Чеклист надо
+                                согласовать</span>
+                            <span style="color:#7a738f;font-size:0.82rem;"> → Встроить в бизнес требования и Definition
+                                of
+                                Done - не оставлять как «рекомендацию»</span>
+                        </div>
+                    </div>
+                    <div class="glass-card"
+                        style="padding:0.85rem 1.1rem;display:flex;align-items:flex-start;gap:12px;">
+                        <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                        <div>
+                            <span style="font-weight:700;font-size:0.88rem;color:#fbbf24;">Инконсистентность в
+                                переходный период</span>
+                            <span style="color:#7a738f;font-size:0.82rem;"> → Честно принять и зафиксировать срок
+                                переходного периода</span>
+                        </div>
+                    </div>
+                    <div class="glass-card"
+                        style="padding:0.85rem 1.1rem;display:flex;align-items:flex-start;gap:12px;">
+                        <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                        <div>
+                            <span style="font-weight:700;font-size:0.88rem;color:#fbbf24;">Время дизайнера</span>
+                            <span style="color:#7a738f;font-size:0.82rem;"> → Приоритет только на типовых виджетах или
+                                выделить время явно</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: CLOSING -->
+        <div class="slide" data-slide="12">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:550px;height:550px;top:-130px;right:-120px;background:#c084fc;opacity:0.13;"></div>
+                <div class="blob"
+                    style="width:380px;height:380px;bottom:-90px;left:-70px;background:#ff6b6b;opacity:0.11;"></div>
+                <div class="blob" style="width:250px;height:250px;top:40%;left:15%;background:#fbbf24;opacity:0.08;">
+                </div>
+                <div class="blob"
+                    style="width:180px;height:180px;bottom:20%;right:18%;background:#34d399;opacity:0.07;"></div>
+            </div>
+            <canvas class="particle-canvas"></canvas>
+            <div class="content" style="text-align:center;">
+                <div style="font-size:72px;animation:float 3.5s ease-in-out infinite;margin-bottom:1.5rem;"
+                    class="reveal">✨</div>
+                <h2 class="grad-text reveal"
+                    style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,4.5vw,3.6rem);font-weight:400;line-height:1.2;margin-bottom:1rem;">
+                    Методология - это не ограничение.<br>Это то, что даёт команде скорость.<br>А Нейротезису - бабки.
+                </h2>
+                <p class="reveal" style="color:#7a738f;font-size:0.9rem;margin-bottom:2rem;letter-spacing:0.05em;">
+                    Следующий шаг: <strong style="color:#34d399;">аудит текущих расхождений</strong> - 2 недели
+                </p>
+                <div class="reveal" style="display:inline-flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <span class="tag tag-coral">UI-кит</span>
+                    <span class="tag tag-violet">Паспорт компонента</span>
+                    <span class="tag tag-amber">Брейкпоинты</span>
+                    <span class="tag tag-green">Нативный скролл</span>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /deck -->
+
+    <div class="nav-controls">
+        <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+        <div class="slide-dots" id="dots"></div>
+        <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+        <span class="slide-counter" id="counter">1 / 12</span>
+    </div>
+
+    <script>
+        let current = 1;
+        const total = document.querySelectorAll('.slide').length;
+        const dotsContainer = document.getElementById('dots');
+        const counter = document.getElementById('counter');
+        for (let i = 1; i <= total; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 1 ? ' active' : '');
+            dot.onclick = () => goToSlide(i);
+            dotsContainer.appendChild(dot);
+        }
+        function goToSlide(n) {
+            const prev = document.querySelector('.slide.active');
+            const next = document.querySelector(`.slide[data-slide="${n}"]`);
+            if (prev) prev.classList.remove('active');
+            if (next) { next.classList.add('active'); animateSlide(next); }
+            current = n; updateNav();
+        }
+        function changeSlide(dir) {
+            let next = current + dir;
+            if (next < 1) next = total;
+            if (next > total) next = 1;
+            goToSlide(next);
+        }
+        function updateNav() {
+            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === current));
+            counter.textContent = current + ' / ' + total;
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); }
+        });
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+        document.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
+        });
+
+        function animateSlide(slide) {
+            slide.querySelectorAll('.reveal').forEach((el, i) => {
+                el.style.transition = 'none';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(18px)';
+                el.offsetHeight;
+                const delay = i * 0.09;
+                el.style.transition = `opacity 0.4s ease ${delay}s, transform 0.4s ease ${delay}s`;
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0px)';
+            });
+            // bar fills
+            slide.querySelectorAll('.bar-fill:not(.fill-init)').forEach((bar, i) => {
+                bar.classList.add('fill-init');
+                bar.style.width = '0%';
+                bar.style.transition = `width 0.6s ease ${i * 0.1}s`;
+                bar.offsetHeight;
+                bar.style.width = bar.dataset.width + '%';
+            });
+        }
+
+        // Mouse spotlight
+        document.addEventListener('mousemove', (e) => {
+            const s = document.querySelector('.mouse-spotlight');
+            if (s) s.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(255,107,107,0.05), transparent 40%)`;
+        });
+
+        // Parallax deco shapes
+        (function () {
+            let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+            const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+            document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
+            (function tick() {
+                const ox = (mx - cx) / cx, oy = (my - cy) / cy;
+                document.querySelectorAll('.deco-shape').forEach(s => {
+                    const sp = parseFloat(s.dataset.speed) || 0.03;
+                    s.style.transform = `translate(${ox * sp * 100}px,${oy * sp * 100}px)`;
+                });
+                requestAnimationFrame(tick);
+            })();
+        })();
+
+        // Particles
+        window.initParticles = function (canvas, options) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const interactive = options.interactive !== false;
+            const count = options.count || (interactive ? 50 : 18);
+            let mx = -1000, my = -1000;
+            let particles = [];
+
+            function createParticle(w, h) {
+                return {
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    size: Math.random() * 2.4 + 0.8,
+                    alpha: Math.random() * 0.28 + 0.08,
+                };
+            }
+
+            function resize() {
+                const w = canvas.clientWidth || canvas.parentElement?.clientWidth || window.innerWidth;
+                const h = canvas.clientHeight || canvas.parentElement?.clientHeight || window.innerHeight;
+                if (w === 0 || h === 0) return;
+                canvas.width = w;
+                canvas.height = h;
+                if (particles.length === 0) {
+                    particles = Array.from({ length: count }, () => createParticle(w, h));
+                } else {
+                    particles.forEach(p => { p.x = Math.min(p.x, w); p.y = Math.min(p.y, h); });
+                }
+            }
+
+            resize();
+
+            if (interactive) {
+                canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mx = e.clientX - rect.left; my = e.clientY - rect.top; });
+                canvas.addEventListener('mouseleave', () => { mx = -1000; my = -1000; });
+            }
+
+            if (window.ResizeObserver) {
+                const ro = new ResizeObserver(() => resize());
+                ro.observe(canvas);
+                if (canvas.parentElement) ro.observe(canvas.parentElement);
+            }
+
+            (function animate() {
+                if (canvas.width === 0 || canvas.height === 0) { requestAnimationFrame(animate); return; }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    if (interactive) {
+                        const dx = p.x - mx, dy = p.y - my, dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                        if (dist < 120) { const force = (120 - dist) / 120 * 1.6; p.vx += (dx / dist) * force * 0.08; p.vy += (dy / dist) * force * 0.08; }
+                    }
+                    p.vx *= 0.985; p.vy *= 0.985; p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+                    if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,107,107,${p.alpha})`; ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            })();
+        };
+        document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { interactive: true, count: 50 }));
+
+        // Animate first slide
+        try { animateSlide(document.querySelector('.slide.active')); } catch (e) { }
+    </script>
+</body>
+
+</html>
